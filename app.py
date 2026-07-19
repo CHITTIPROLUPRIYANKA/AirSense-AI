@@ -3,6 +3,7 @@ import requests
 import joblib
 import pandas as pd
 import os
+import traceback
 
 app = Flask(__name__)
 
@@ -227,7 +228,9 @@ def home():
             
 
         except Exception as e:
-            print("Error:", e)
+            print("========== FULL ERROR ==========")
+            traceback.print_exc()
+            print("===============================")
 
     return render_template(
         "index.html",
