@@ -11,7 +11,7 @@ model = joblib.load("models/aqi_model.pkl")
 forecast_model = joblib.load("models/forecast_model.pkl")
 
 
-API_KEY = os.getenv("OPENWEATHER_API_KEY")
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 recent_cities = [] 
 
 latest_data = {
