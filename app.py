@@ -43,7 +43,7 @@ def get_city_aqi(city_name):
     try:
         geo_url = (
             f"http://api.openweathermap.org/geo/1.0/direct"
-            f"?q={city_name}&limit=1&appid={API_KEY}"
+            f"?q={city_name}&limit=1&appid={OPENWEATHER_API_KEY}"
         )
 
         geo_data = requests.get(geo_url).json()
@@ -56,7 +56,7 @@ def get_city_aqi(city_name):
 
         air_url = (
             f"http://api.openweathermap.org/data/2.5/air_pollution"
-            f"?lat={lat}&lon={lon}&appid={API_KEY}"
+            f"?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}"
         )
 
         air_data = requests.get(air_url).json()
@@ -120,7 +120,7 @@ def home():
             # Get coordinates
             geo_url = (
                 f"http://api.openweathermap.org/geo/1.0/direct"
-                f"?q={city}&limit=1&appid={API_KEY}"
+                f"?q={city}&limit=1&appid={OPENWEATHER_API_KEY}"
             )
 
             geo_data = requests.get(geo_url).json()
@@ -142,7 +142,7 @@ def home():
             # Get air pollution data
             air_url = (
                 f"http://api.openweathermap.org/data/2.5/air_pollution"
-                f"?lat={lat}&lon={lon}&appid={API_KEY}"
+                f"?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}"
             )
 
             air_data = requests.get(air_url).json()
