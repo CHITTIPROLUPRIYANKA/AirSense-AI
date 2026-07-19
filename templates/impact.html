@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Impact - AirSense AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo">🌍 AirSense AI</div>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/forecast">Forecast</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/impact" class="active">Impact</a>
+    </div>
+</nav>
+
+<section class="impact-page">
+
+    <h1 class="impact-title">🏭 Impact of Air Pollution</h1>
+    <p class="impact-subtitle">
+        AI Powered Insights on Health, Environment & Society
+    </p>
+    <div class="stats-container">
+
+    <div class="stat-card">
+        <h2>6.6M+</h2>
+        <p>Deaths / Year</p>
+        <small>Source: WHO (Latest)</small>
+    </div>
+
+    <div class="stat-card">
+        <h2>99%</h2>
+        <p>Population Exposed</p>
+        <small>Source: WHO (Latest)</small>
+    </div>
+
+    <div class="stat-card">
+        <h2>17L+</h2>
+        <p>India Deaths</p>
+        <small>Recent Reports</small>
+    </div>
+
+</div>
+
+<section class="body-impact-section">
+
+    <div class="impact-layout">
+
+        <div class="impact-image-wrapper">
+            <h2 class="impact-heading">How Pollution Affects Your Body</h2>
+            <img src="{{ url_for('static', filename='organs 2.png') }}" alt="Body Impact">
+        </div>
+
+    <!-- RIGHT: New Image -->
+    <div class="impact-side-image">
+        <h2 class="right-heading">How Does Air Pollution Form</h2>
+        <img src="{{ url_for('static', filename='pollutions.png') }}" alt="Impact Visual">
+    </div>
+
+</div>
+
+</section>
+
+<script>
+// Scene
+const scene = new THREE.Scene();
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+// BACKGROUND FIX
+renderer.domElement.style.position = "fixed";
+renderer.domElement.style.top = "0";
+renderer.domElement.style.left = "0";
+renderer.domElement.style.zIndex = "-1";
+
+document.body.appendChild(renderer.domElement);
+
+// ⭐ STARS
+const starGeometry = new THREE.BufferGeometry();
+const starCount = 2000;
+const starVertices = [];
+
+for (let i = 0; i < starCount; i++) {
+    starVertices.push(
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200
+    );
+}
+
+starGeometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(starVertices, 3)
+);
+
+const starMaterial = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.2
+});
+
+const stars = new THREE.Points(starGeometry, starMaterial);
+scene.add(stars);
+
+// Camera position
+camera.position.z = 10;
+
+// Animate
+function animate() {
+    requestAnimationFrame(animate);
+
+    stars.rotation.y += 0.0003;
+    stars.rotation.x += 0.0001;
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Resize fix
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+
+<section class="breath-section">
+
+    <h2 class="breath-title">Every Breath Matters</h2>
+    <p class="breath-subtitle">Clean Air. Healthy Life.</p>
+
+    <div class="breath-image">
+        <img src="{{ url_for('static', filename='plant.png') }}" alt="Breath Matters">
+    </div>
+
+</section>
+
+
+</body>
+</html>

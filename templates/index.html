@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AirSense AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="logo">🌍 AirSense AI</div>
+
+    <div class="nav-links">
+        <a href="/clear" class="active">Home</a>
+        <a href="/forecast">Forecast</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/impact">Impact</a>
+    </div>
+</nav>
+
+<!-- ================= BEFORE SEARCH ================= -->
+{% if prediction is none %}
+
+<div class="before-layout">
+
+    <div class="left-panel">
+
+        <div class="header">
+            <h1>🌍 AirSense AI</h1>
+            <p>Real-Time Air Quality Intelligence Platform</p>
+        </div>
+
+        <form method="POST" class="search-box">
+            <div class="input-wrapper">
+                <input id="cityInput"
+                       type="text"
+                       name="city"
+                       placeholder="Enter City Name"
+                       required>
+
+                <span class="clear-btn" onclick="clearInput()">✕</span>
+            </div>
+
+            <button type="submit">Predict AQI</button>
+        </form>
+
+    </div>
+
+    <!-- 👇 SAFE FLAG (NO JINJA IN JS) -->
+    <div id="globe-container" data-prediction="false"></div>
+
+</div>
+
+{% endif %}
+
+<!-- ================= AFTER SEARCH ================= -->
+{% if prediction is not none %}
+
+<div class="container">
+
+    <div class="header">
+        <h1>🌍 AirSense AI</h1>
+        <p>Real-Time Air Quality Intelligence Platform</p>
+    </div>
+
+    <form method="POST" class="search-box">
+        <div class="input-wrapper">
+            <input id="cityInput"
+                   type="text"
+                   name="city"
+                   value="{{ city }}"
+                   required>
+
+            <span class="clear-btn" onclick="clearInput()">✕</span>
+        </div>
+
+        <button type="submit">Predict AQI</button>
+    </form>
+
+    <div class="cards">
+        <div class="card">
+            <h3>AQI</h3>
+            <h1>{{ prediction }}</h1>
+        </div>
+
+        <div class="card">
+            <h3>Category</h3>
+            <h1>{{ category }}</h1>
+        </div>
+    </div>
+
+    <div class="health-card">
+        <h2>Health Recommendation</h2>
+
+        {% if prediction <= 50 %}
+            <p>Excellent air quality.</p>
+        {% elif prediction <= 100 %}
+            <p>Acceptable air quality.</p>
+        {% elif prediction <= 200 %}
+            <p>Sensitive groups should be careful.</p>
+        {% elif prediction <= 300 %}
+            <p>Reduce outdoor activity.</p>
+        {% else %}
+            <p>Severe pollution.</p>
+        {% endif %}
+
+    </div>
+
+    <div class="pollution-grid">
+        <div class="card"><h3>PM2.5</h3><h2>{{ pollutants["PM2.5"] }}</h2></div>
+        <div class="card"><h3>PM10</h3><h2>{{ pollutants["PM10"] }}</h2></div>
+        <div class="card"><h3>NO2</h3><h2>{{ pollutants["NO2"] }}</h2></div>
+        <div class="card"><h3>CO</h3><h2>{{ pollutants["CO"] }}</h2></div>
+        <div class="card"><h3>SO2</h3><h2>{{ pollutants["SO2"] }}</h2></div>
+        <div class="card"><h3>O3</h3><h2>{{ pollutants["O3"] }}</h2></div>
+    </div>
+
+</div>
+
+{% endif %}
+
+<!-- ================= THREE.JS (100% SAFE VERSION) ================= -->
+<script>
+const container = document.getElementById("globe-container");
+const hasPrediction = !container;
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+const renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    antialias: true
+});
+
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+/* ================= EARTH ================= */
+/* ================= EARTH ================= */
+const earthGeo = new THREE.SphereGeometry(5.35, 64, 64)
+
+const earth = new THREE.Mesh(
+    earthGeo,
+    new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load("/static/Earth.jpg"),
+        emissive: 0x3355ff,
+        emissiveIntensity: 0.08
+    })
+);
+
+scene.add(earth);
+earth.position.x = 5;
+earth.position.y = -0.5;
+
+/* ================= GLOW ================= */
+const glow = new THREE.Mesh(
+    new THREE.SphereGeometry(5.35, 64, 64),
+    new THREE.MeshBasicMaterial({
+        color: 0x4da3ff,
+        transparent: true,
+        opacity: 0.005
+    })
+);
+
+scene.add(glow);
+glow.position.x = 5;
+glow.position.y = -0.5;
+
+
+/* ================= LIGHTS ================= */
+const light = new THREE.PointLight(0xffffff, 1.8);
+light.position.set(13, 5, 8);
+scene.add(light);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+/* ================= STARS ================= */
+const starGeo = new THREE.BufferGeometry();
+const starArr = [];
+
+for (let i = 0; i < 2000; i++) {
+    starArr.push(
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200
+    );
+}
+
+starGeo.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(starArr, 3)
+);
+
+const stars = new THREE.Points(
+    starGeo,
+    new THREE.PointsMaterial({ color: 0xffffff, size: 0.2 })
+);
+
+scene.add(stars);
+
+camera.position.z = 10;
+
+/* ================= LOGIC ================= */
+if (hasPrediction) {
+    earth.visible = false;
+}
+
+/* ================= ANIMATION ================= */
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (!hasPrediction) {
+        earth.rotation.y += 0.003;
+    }
+
+    stars.rotation.y += 0.0003;
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+/* ================= RESIZE ================= */
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+function clearInput() {
+    document.getElementById("cityInput").value = "";
+}
+</script>
+
+</body>
+</html>

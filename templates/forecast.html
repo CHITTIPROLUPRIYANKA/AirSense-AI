@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forecast - AirSense AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="logo">🌍 AirSense AI</div>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/forecast" class="active">Forecast</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/impact">Impact</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🔮 AI Forecast Engine</h1>
+        <p>Predict Future Air Quality up to 7 Days</p>
+    </div>
+
+    <!-- SEARCH + DAYS DROPDOWN -->
+    <div class="search-box">
+
+        <input type="text" value="{{ city }}" readonly>
+
+        <select class="days-dropdown" onchange="selectDay(this.value)">
+            <option value="none">Select Forecast Day</option>
+            <option value="1">Day 1</option>
+            <option value="2">Day 2</option>
+            <option value="3">Day 3</option>
+            <option value="4">Day 4</option>
+            <option value="5">Day 5</option>
+            <option value="6">Day 6</option>
+            <option value="7">Day 7</option>
+        </select>
+
+    </div>
+
+</div>
+
+
+<!-- AQI RING -->
+<div class="meter-wrapper">
+    <div class="aqi-ring" id="aqiRing">
+        <div class="meter-inner">
+
+            <h2 class="app-title">AirSense AI</h2>
+
+            <h1 id="aqiValue"></h1>
+
+            <p id="aqiLabel">AQI Forecast</p>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script>
+const forecast = JSON.parse('{{ forecast | tojson | safe }}');
+
+function selectDay(day) {
+
+    console.log("selectDay triggered:", day);
+
+    const valueEl = document.getElementById("aqiValue");
+    const labelEl = document.getElementById("aqiLabel");
+    const ring = document.getElementById("aqiRing");
+
+    if (!forecast || forecast.length === 0) {
+        valueEl.innerText = "--";
+        labelEl.innerText = "No Data";
+        return;
+    }
+
+    // reset state
+    if (day === "none") {
+        valueEl.innerText = "--";
+        labelEl.innerText = "AQI Forecast";
+
+        ring.style.background =
+            "linear-gradient(135deg,#00e5ff,#2979ff,#651fff)";
+        return;
+    }
+
+    let index = parseInt(day) - 1;
+    let aqi = forecast[index];
+
+
+    // 🔥 HARD SAFE CHECK (fixes "__" issue)
+    if (aqi === undefined || aqi === null || isNaN(aqi)) {
+        valueEl.innerText = "--";
+        labelEl.innerText = "No Data";
+        return;
+    }
+
+    // update AQI value
+    valueEl.innerText = aqi;
+
+    // update label + color
+    if (aqi <= 50) {
+        labelEl.innerText = "Good";
+    }
+    else if (aqi <= 100) {
+        labelEl.innerText = "Moderate";
+    }
+    else if (aqi <= 150) {
+        labelEl.innerText = "Poor";
+    }
+    else if (aqi <= 200) {
+        labelEl.innerText = "Unhealthy";
+    }
+    else {
+        labelEl.innerText = "Severe";
+    }
+}
+</script>
+<div id="globe-container"></div>
+<script>
+// Scene
+const scene = new THREE.Scene();
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// ⭐ STAR CREATION
+const starGeometry = new THREE.BufferGeometry();
+const starCount = 2000;
+const starVertices = [];
+
+for (let i = 0; i < starCount; i++) {
+    starVertices.push(
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200
+    );
+}
+
+starGeometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(starVertices, 3)
+);
+
+const starMaterial = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.2
+});
+
+const stars = new THREE.Points(starGeometry, starMaterial);
+scene.add(stars);
+
+// Camera position
+camera.position.z = 10;
+
+// Animate stars
+function animate() {
+    requestAnimationFrame(animate);
+
+    stars.rotation.y += 0.0003;
+    stars.rotation.x += 0.0001;
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Resize fix
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>

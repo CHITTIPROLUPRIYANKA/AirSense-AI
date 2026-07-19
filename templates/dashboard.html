@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - AirSense AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">🌍 AirSense AI</div>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/forecast">Forecast</a>
+        <a href="/dashboard" class="active">Dashboard</a>
+        <a href="/impact">Impact</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="header">
+        <h1>📊 Dashboard</h1>
+        <p>Air Quality Analytics & Insights</p>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="chart-card large">
+            <h2>AQI Forecast Trend</h2>
+            <div id="aqiChart" style="height:320px;"></div>
+        </div>
+
+        <div class="chart-card">
+            <h2>Current Pollutant Distribution</h2>
+            <p class="chart-subtitle">Live pollutant concentrations of selected city</p>
+            <div id="pollutantChart" style="height:220px;"></div>
+        </div>
+
+        <div class="chart-card">
+            <h2>Forecast Risk Analysis</h2>
+            <div id="forecastChart" style="height:220px;"></div>
+        </div>
+
+        <div class="chart-card">
+            <h2>Top 5 Polluted Cities in India</h2>
+            <div id="cityChart" style="height:220px;"></div>
+        </div>
+
+        <div class="chart-card">
+            <h2>Seasonal Analysis</h2>
+            <div id="seasonChart" style="height:220px;"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+const prediction = {{ prediction | tojson }};
+const forecast = {{ forecast | tojson }};
+const pollutants = {{ pollutants | tojson }};
+const top5 = {{ top5 | tojson }};
+
+var chart = echarts.init(document.getElementById('aqiChart'));
+
+var option = {
+    backgroundColor: 'transparent',
+
+    tooltip: {
+        trigger: 'axis'
+    },
+
+    grid: {
+        left: '5%',
+        right: '5%',
+        bottom: '8%',
+        top: '10%',
+        containLabel: true
+    },
+
+    xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: ['Today', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'],
+        axisLine: {
+            lineStyle: {
+                color: '#475569'
+            }
+        },
+        axisLabel: {
+            color: '#cbd5e1'
+        }
+    },
+
+    yAxis: {
+        type: 'value',
+        axisLine: {
+            lineStyle: {
+                color: '#475569'
+            }
+        },
+        splitLine: {
+            lineStyle: {
+                color: 'rgba(255,255,255,0.08)'
+            }
+        },
+        axisLabel: {
+            color: '#cbd5e1'
+        }
+    },
+
+    series: [{
+        data: [
+            prediction,
+            forecast[0],
+            forecast[1],
+            forecast[2],
+            forecast[3],
+            forecast[4],
+            forecast[5],
+            forecast[6]
+        ],
+        type: 'line',
+        smooth: true,
+        symbolSize: 8,
+
+        lineStyle: {
+            width: 4,
+            color: '#3b82f6'
+        },
+
+        areaStyle: {
+            color: 'rgba(59,130,246,0.25)'
+        }
+    }]
+};
+
+chart.setOption(option);
+var pollutantChart = echarts.init(document.getElementById('pollutantChart'));
+
+var pollutantOption = {
+    backgroundColor: 'transparent',
+
+    tooltip: {
+    trigger: 'item',
+    backgroundColor: 'rgba(15,23,42,0.95)',
+    borderColor: '#3b82f6',
+    borderWidth: 1,
+    textStyle: {
+        color: '#ffffff'
+    },
+    formatter: function(params) {
+        return `
+            <b>${params.name}</b><br/>
+            Value: ${params.value}
+        `;
+    }
+},
+
+    grid: {
+        left: '15%',
+        right: '5%',
+        top: '10%',
+        bottom: '5%',
+        containLabel: true
+    },
+
+    xAxis: {
+        type: 'value',
+        axisLabel: {
+            color: '#cbd5e1'
+        },
+        splitLine: {
+            lineStyle: {
+                color: 'rgba(255,255,255,0.08)'
+            }
+        }
+    },
+
+    yAxis: {
+        type: 'category',
+        data: ['PM2.5', 'PM10', 'NO2', 'CO', 'SO2', 'O3'],
+        axisLabel: {
+            color: '#cbd5e1'
+        }
+    },
+
+series: [{
+    type: 'bar',
+
+    data: [
+        pollutants["PM2.5"],
+        pollutants["PM10"],
+        pollutants["NO2"],
+        pollutants["CO"],
+        pollutants["SO2"],
+        pollutants["O3"]
+    ],
+
+    barWidth: 18,
+
+    animationDuration: 1200,
+    animationDurationUpdate: 1200,
+    animationDelay: function (idx) {
+        return idx * 250;
+    },
+    animationEasing: 'elasticOut',
+
+    itemStyle: {
+        color: '#3b82f6',
+        borderRadius: [0, 8, 8, 0]
+    },
+
+    emphasis: {
+        itemStyle: {
+            color: '#60a5fa',
+            shadowBlur: 30,
+            shadowColor: 'rgba(96,165,250,0.9)'
+        }
+    }
+}]
+};
+
+pollutantChart.setOption(pollutantOption);
+
+var forecastChart = echarts.init(document.getElementById('forecastChart'));
+
+var forecastOption = {
+    tooltip: {
+        trigger: 'axis'
+    },
+
+    legend: {
+    top: 5,
+    right: 20,
+    data: ['Safe Limit', 'Forecast AQI'],
+    textStyle: {
+        color: '#cbd5e1'
+    }
+},
+
+    grid: {
+        left: '8%',
+        right: '5%',
+        top: '18%',
+        bottom: '8%',
+        containLabel: true
+    },
+
+    xAxis: {
+        type: 'category',
+        data: ['Day1', 'Day2', 'Day3', 'Day4', 'Day5'],
+        axisLabel: {
+            color: '#cbd5e1'
+        }
+    },
+
+    yAxis: {
+        type: 'value',
+        axisLabel: {
+            color: '#cbd5e1'
+        },
+        splitLine: {
+            lineStyle: {
+                color: 'rgba(255,255,255,0.08)'
+            }
+        }
+    },
+
+    series: [
+        {
+            name: 'Safe Limit',
+            type: 'line',
+            smooth: true,
+            symbol: 'none',
+            lineStyle: {
+                width: 3,
+                color: '#22c55e',
+                type: 'dashed'
+            },
+            data: [100, 100, 100, 100, 100]
+        },
+
+        {
+            name: 'Forecast AQI',
+            type: 'line',
+            smooth: true,
+            symbolSize: 8,
+            lineStyle: {
+                width: 4,
+                color: '#3b82f6'
+            },
+            areaStyle: {
+                color: 'rgba(59,130,246,0.15)'
+            },
+            data: [
+                forecast[0],
+                forecast[1],
+                forecast[2],
+                forecast[3],
+                forecast[4]
+            ]
+        }
+    ]
+};
+
+forecastChart.setOption(forecastOption);
+
+
+var cityChart = echarts.init(document.getElementById('cityChart'));
+
+var cityOption = {
+    tooltip: {
+        trigger: 'item',
+        backgroundColor: 'rgba(15,23,42,0.95)',
+        borderColor: '#3b82f6',
+        borderWidth: 1,
+        textStyle: {
+            color: '#ffffff'
+        },
+        formatter: function(params) {
+            return '<b>' + params.name + '</b><br/>AQI: ' + params.value;
+        }
+    },
+
+    grid: {
+        left: '8%',
+        right: '5%',
+        top: '10%',
+        bottom: '22%',
+        containLabel: true
+    },
+
+    xAxis: {
+        type: 'category',
+        data: Object.keys(top5).reverse(),
+        axisLabel: {
+            color: '#cbd5e1',
+            interval: 0,
+            rotate: 0,
+            fontSize: 10
+        }
+    },
+
+    yAxis: {
+        type: 'value',
+        axisLabel: {
+            color: '#cbd5e1'
+        },
+        splitLine: {
+            lineStyle: {
+                color: 'rgba(255,255,255,0.08)'
+            }
+        }
+    },
+
+    series: [{
+        type: 'bar',
+        data: Object.values(top5).reverse(),
+        barWidth: 30
+    }]
+};
+
+cityChart.setOption(cityOption);
+
+var seasonChart = echarts.init(document.getElementById('seasonChart'));
+
+var seasonOption = {
+    tooltip: {
+        trigger: 'item'
+    },
+
+    series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        data: [
+            { value: 220, name: 'Winter' },
+            { value: 140, name: 'Summer' },
+            { value: 90, name: 'Rainy' }
+        ]
+    }]
+};
+
+seasonChart.setOption(seasonOption);
+</script>
+
+<script>
+// Scene
+const scene = new THREE.Scene();
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({ alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+// IMPORTANT: append behind charts
+renderer.domElement.style.position = "fixed";
+renderer.domElement.style.top = "0";
+renderer.domElement.style.left = "0";
+renderer.domElement.style.zIndex = "-1";
+
+document.body.appendChild(renderer.domElement);
+
+// ⭐ STARS
+const starGeometry = new THREE.BufferGeometry();
+const starCount = 2000;
+const starVertices = [];
+
+for (let i = 0; i < starCount; i++) {
+    starVertices.push(
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 200
+    );
+}
+
+starGeometry.setAttribute(
+    'position',
+    new THREE.Float32BufferAttribute(starVertices, 3)
+);
+
+const starMaterial = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.2
+});
+
+const stars = new THREE.Points(starGeometry, starMaterial);
+scene.add(stars);
+
+// Camera position
+camera.position.z = 10;
+
+// Animate stars
+function animate() {
+    requestAnimationFrame(animate);
+
+    stars.rotation.y += 0.0003;
+    stars.rotation.x += 0.0001;
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Resize fix
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>
